@@ -9,24 +9,56 @@ function TodoApp() {
   const [filter, setFilter] = useState("all");
   const [list, setList] = useState([]);
 
+  // useEffect(() => {
+  //   const storedTasks = JSON.parse(localStorage.getItem("list")) || [];
+  //   setList(storedTasks);
+  // }, []);
+
   useEffect(() => {
-    const storedTasks = JSON.parse(localStorage.getItem("list")) || [];
-    setList(storedTasks);
+    const fetchTasks = async () => {
+      const storedTasks = JSON.parse(localStorage.getItem("list"));
+      if (storedTasks) {
+        setList(storedTasks);
+      } else {
+        try {
+          const response = await fetch("https://dummyjson.com/todos");
+          const data = await response.json();
+          setList(data.todos);
+          localStorage.setItem("list", JSON.stringify(data.todos));
+        } catch (error) {
+          console.error("Error fetching tasks:", error);
+        }
+      }
+    };
+    fetchTasks();
   }, []);
 
-  const addTask = () => {
+  const addTask = async () => {
     if (task.trim()) {
-      const updatedList = [
-        ...list,
-        { id: list.length, text: task, completed: false },
-      ];
-      setList(updatedList);
-      localStorage.setItem("list", JSON.stringify(updatedList));
-      setTask("");
+      const payload = {
+        id: list[list.length - 1].id + 1,
+        todo: task,
+        completed: false,
+        userId: Math.floor(Math.random() * 200),
+      };
+      const updatedList = [ ...list, payload ];
+      try {
+        await fetch("https://dummyjson.com/todos/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        setList(updatedList);
+        localStorage.setItem("list", JSON.stringify(updatedList));
+        setTask("");
+      } catch (error) {
+        console.error("Error adding task:", error);
+      }
+
     }
   };
 
-  const toggleTask = (id, action = "") => {
+  const toggleTask = async (id, action = "") => {
     let updatedList = JSON.parse(JSON.stringify(list));
     switch (action) {
       case toggleActions.Delete:
@@ -39,8 +71,21 @@ function TodoApp() {
         );
         break;
     }
-    setList(updatedList);
-    localStorage.setItem("list", JSON.stringify(updatedList));
+    
+    try {
+      const apiParams = {
+        method: action === toggleActions.Delete ? "DELETE" : "PUT",
+      }
+      if(action !== toggleActions.Delete) {
+        apiParams["headers"] = { "Content-Type": "application/json" }
+        apiParams["body"] = JSON.stringify({ completed: !updatedList.find((t) => t.id === id).completed })
+      }
+      await fetch(`https://dummyjson.com/todos/${id}`, apiParams);
+      setList(updatedList);
+      localStorage.setItem("list", JSON.stringify(updatedList));
+    } catch (error) {
+      console.error("Error toggling task:", error);
+    }
   };
 
   return (
