@@ -1,6 +1,6 @@
 import React from "react";
 
-function AddTodo({ task, setTask, addTask }) {
+function AddTodo({ task, setTask, addTask, loading }) {
   return (
     <>
       <input
@@ -10,10 +10,12 @@ function AddTodo({ task, setTask, addTask }) {
         onChange={(e) => setTask(e.target.value)}
         placeholder="Add a new task"
         maxLength={100}
+        disabled={loading}
       />
       <button
         className="btn btn-primary px-4"
         onClick={addTask}
+        disabled={loading}
       >
         Add
       </button>

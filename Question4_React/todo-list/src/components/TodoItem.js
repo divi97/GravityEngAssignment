@@ -1,6 +1,6 @@
 import React from "react";
 
-function TodoItem({ item, toggleTask }) {
+function TodoItem({ item, toggleTask, loading }) {
   return (
     <li
       key={item.id}
@@ -10,6 +10,7 @@ function TodoItem({ item, toggleTask }) {
       <button
         className="btn btn-danger btn-sm"
         onClick={() => toggleTask(item.id, "delete")}
+        disabled={loading}
       >
         X
       </button>
